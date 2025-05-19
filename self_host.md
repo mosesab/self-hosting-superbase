@@ -47,8 +47,8 @@ This script automates the deployment and initial configuration of a self-hosted 
 -   `sshpass`: (Optional) Only if you intend to use password-based SSH authentication. Key-based authentication is strongly recommended. Install via `sudo apt install sshpass`.
 -   The following files must be in the same directory as `self_host.sh`:
     -   `servers.json`: Configuration file for your VPS instances.
-    -   `supabase.secure.template.txt`: Nginx template for domain-based setups.
-    -   `supabase.insecure.template.txt`: Nginx template for IP-based setups.
+    -   `supabase.nginx.secure.template`: Nginx template for domain-based setups.
+    -   `supabase.nginx.insecure.template`: Nginx template for IP-based setups.
 
 ### Remote VPS
 
