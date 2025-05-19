@@ -65,8 +65,8 @@ set -eo pipefail
 # --- Configuration ---
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 SERVERS_CONFIG_FILE="$SCRIPT_DIR/servers.json"
-NGINX_SECURE_TEMPLATE_FILE="$SCRIPT_DIR/supabase.secure.template.txt"
-NGINX_INSECURE_TEMPLATE_FILE="$SCRIPT_DIR/supabase.insecure.template.txt"
+NGINX_SECURE_TEMPLATE_FILE="$SCRIPT_DIR/supabase.nginx.secure.template"
+NGINX_INSECURE_TEMPLATE_FILE="$SCRIPT_DIR/supabase.nginx.insecure.template"
 
 # Log levels: 0=silent, 1=info, 2=debug
 LOG_LEVEL="${LOG_LEVEL:-1}"
