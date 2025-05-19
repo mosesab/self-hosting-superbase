@@ -1,6 +1,6 @@
 # self-hosting-superbase
 
-# 🛠️ How to Self-Host Supabase on a VPS Server
+# 🛠️ How to Self-Host Supabase on a VPS Server (in 2 minutes)
 
 Self-hosting Supabase on a VPS server is a practical approach for developers seeking greater control, customization, and cost efficiency. By deploying Supabase on your own infrastructure, you can tailor the backend services to your specific needs. Here's a comprehensive guide to help you set up Supabase on a VPS:
 
