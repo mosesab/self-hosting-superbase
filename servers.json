@@ -1,0 +1,12 @@
+[
+  {
+    "name": "MySupabaseServer1",
+    "host": "your_server_ip_or_hostname",
+    "user": "root",
+    "password": "your_ssh_password",
+    "domain_or_ip": "supabase.yourdomain.com",
+    "certbot_email": "youremail@example.com",
+    "supabase_path": "/opt/supabase_main",
+    "enable_ufw": true
+  }
+]
