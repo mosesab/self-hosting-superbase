@@ -1,0 +1,107 @@
+# supabase.insecure.template.txt
+# Nginx configuration for Supabase with an IP address.
+# Redirects HTTPS (port 443, using snakeoil cert) to HTTP (port 80).
+# Serves Supabase over HTTP via Nginx proxy to Kong.
+
+# Server block for HTTPS (port 443) to redirect to HTTP
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl; # For IPv6 if needed
+    server_name {{SUBDOMAIN_ADDRESS}}; # This will be the IP address
+
+    # Use self-signed (snakeoil) certificates for the HTTPS redirect.
+    # The self_host.sh script ensures these are generated.
+    ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+    ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers off;
+
+    location / {
+        return 301 http://$host$request_uri;
+    }
+}
+
+# Server block for HTTP (port 80) - Main Supabase serving
+server {
+    listen 80;
+    listen [::]:80; # For IPv6 if needed
+    server_name {{SUBDOMAIN_ADDRESS}}; # This will be the IP address
+
+    # Set a large client_max_body_size, Nginx's limit should be >= Kong's.
+    client_max_body_size 1G; # Adjust as needed
+
+    # === Patch for a bug in Supabase Studio routing ===
+    location = /studio/project/default/ {
+        return 302 /studio/project/[ref]/editor?ref=default;
+    }
+
+    # Proxy to Supabase Studio (general UI access)
+    location ^~ /studio/ {
+        proxy_pass http://127.0.0.1:8000/studio/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme; # $scheme will be 'http'
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffering off;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+        proxy_redirect ~^http://[^/]+/(.*)$ /studio/$1;
+    }
+
+    # Proxy Supabase Studio's Next.js static assets
+    location /_next/static/ {
+        proxy_pass http://127.0.0.1:8000/_next/static/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy Supabase Studio's Monaco editor assets
+    location /monaco-editor/ {
+        proxy_pass http://127.0.0.1:8000/monaco-editor/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy Supabase Studio's internal API routes or other /api/ prefixed routes
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffering off;
+    }
+
+    # Main location to proxy all other requests to Kong.
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme; # $scheme will be 'http'
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_buffering off;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+
+    # Common security headers (less effective over HTTP, but good practice)
+    # HSTS (Strict-Transport-Security) is not applicable for HTTP.
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+}
